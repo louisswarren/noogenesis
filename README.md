@@ -3,7 +3,7 @@ A proof-assistant-using neural network formed using a genetic algorithm
 
 ## Goals
 The primary goal is to train a network to use
-[MINLOG](www.mathematik.uni-muenchen.de/~logik/minlog/). More achievable
+[MINLOG](http://www.mathematik.uni-muenchen.de/~logik/minlog/). More achievable
 subgoals are:
 
 * Recognise trivial implications (those of the form `P => P`).
