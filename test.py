@@ -90,12 +90,11 @@ def run():
         print("VS testing:", score(fittest[0][0], *testing_data),
                              score(fittest[1][0], *testing_data),
                              score(fittest[2][0], *testing_data))
-        new_pool = [x[0].crossover(y[0])
-                    for (i, x) in enumerate(fittest)
-                    for y in fittest[i+1:]]
-        for new_net in new_pool:
-            new_net.mutate_weights(mutparam)
-        pool = [x[0] for x in fittest] + new_pool
+        pool = [x[0] for x in fittest]
+        pool += [x[0].crossover(y[0])
+                 for (i, x) in enumerate(fittest) for y in fittest[i+1:]]
+        for net in pool:
+            net.mutate_weights(mutparam)
         print("Breeding complete")
 
 if __name__ == '__main__':
