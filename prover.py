@@ -1,28 +1,8 @@
-compose = lambda f: lambda g: lambda *a, **k: f(g(*a, **k))
+from formula import *
 
-class Formula:
-    def __rshift__(self, other):
-        return Impl(self, other)
+_compose = lambda f: lambda g: lambda *a, **k: f(g(*a, **k))
 
-class Atom(Formula):
-    def __init__(self, name):
-        self.name = name
-
-    def __repr__(self):
-        return f"Atom('{self.name}')"
-
-    def __str__(self):
-        return self.name
-
-class Impl(Formula):
-    def __init__(self, prem, conc):
-        self.prem = prem
-        self.conc = conc
-
-    def __repr__(self):
-        return f"({self.prem} >> {self.conc})"
-
-class Proof:
+class Prover:
     def __init__(self, context, goal):
         self.context = context
         self.goal = goal
@@ -43,7 +23,7 @@ class Proof:
             premises.append(f.prem)
             f = f.conc
         for premise in premises:
-            self.subproofs.append(Proof(self.context, premise))
+            self.subproofs.append(Prover(self.context, premise))
         self.proved = True
 
     def open_problems(self):
@@ -61,7 +41,7 @@ class Proof:
     def use(self, n):
         self.next_problem().do_use(n)
 
-    @compose('\n'.join)
+    @_compose('\n'.join)
     def __str__(self):
         for i, f in enumerate(self.context):
             yield f"{i:>2}: {f}"
@@ -69,7 +49,7 @@ class Proof:
         yield f"  {self.goal}"
         yield ""
 
-    @compose('\n'.join)
+    @_compose('\n'.join)
     def status(self):
         problems = [str(p) for p in self.open_problems()]
         if problems:
@@ -79,7 +59,7 @@ class Proof:
 
 if __name__ == '__main__':
     P, Q, R = (Atom(x) for x in "PQR")
-    p = Proof([], (P >> (Q >> R)) >> (Q >> (P >> R)))
+    p = Prover([], (P >> (Q >> R)) >> (Q >> (P >> R)))
     p.assume()
     p.assume()
     p.assume()
