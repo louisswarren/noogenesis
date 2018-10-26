@@ -3,6 +3,7 @@ import random
 from neural import *
 from formula import *
 
+enc_size = 8 # Need at least 3 for P, Q, R
 P, Q, R = (Atom(x) for x in "PQR")
 
 def encode_formula(x):
@@ -10,11 +11,11 @@ def encode_formula(x):
     if isinstance(x, Impl):
         return Stem(np.array([1]), encode_formula(x.prem), encode_formula(x.conc))
     elif x == P:
-        return Leaf(np.array([1, 0, 0]))
+        return Leaf(np.eye(enc_size, 1, 0))
     elif x == Q:
-        return Leaf(np.array([0, 1, 0]))
+        return Leaf(np.eye(enc_size, 1, 1))
     elif x == R:
-        return Leaf(np.array([0, 0, 1]))
+        return Leaf(np.eye(enc_size, 1, 2))
     else:
         raise NotImplementedError
 
@@ -41,41 +42,61 @@ def random_nontriv_impl(p):
 def triv(x):
     return x >> x
 
-p = 0.9
-train_size = 1000
-nontriv_training = [encode_formula(random_nontriv_impl(p)) for _ in range(train_size // 2)]
-triv_training = [encode_formula(triv(random_formula(p*p))) for _ in range(train_size // 2)]
-test_size = 100
-nontriv_testing = [encode_formula(random_nontriv_impl(p)) for _ in range(test_size // 2)]
-triv_testing = [encode_formula(triv(random_formula(p*p))) for _ in range(test_size // 2)]
+def gen_nontriv(p, n):
+    return [encode_formula(random_nontriv_impl(p)) for _ in range(n)]
 
-def score(network, nontriv_data, triv_data):
+def gen_triv(p, n):
+    return [encode_formula(triv(random_formula(p*p))) for _ in range(n)]
+
+def score(network, nontrivs, trivs):
     c = 0
-    for nontriv in nontriv_data:
+    for nontriv in nontrivs:
         if network.think(nontriv)[0] >= 1:
             c += 1
-    for triv in triv_data:
+    for triv in trivs:
         if network.think(triv)[0] < 1:
             c += 1
-    return c
+    return c / (len(nontrivs) + len(trivs))
 
-# Create a lot of networks and find the best
-pool = [RandomTreeNetwork(1, 3, [20], [20], 1) for _ in range(100)]
-top20 = sorted(pool, key=lambda n: score(n, nontriv_training, triv_training), reverse=True)[:20]
+depthparam = 0.9
+train_size = 1000
+test_size = 100
 
-for net in top20:
-    print(score(net, nontriv_testing, triv_testing) / test_size)
+root_size = 1 # Just have implication
 
-print()
-newpool = []
-for (i, x) in enumerate(top20):
-    for y in top20[i+1:]:
-        newpool.append(x.crossover(y))
+hiddens = [20]
 
-nontriv_testing = [encode_formula(random_nontriv_impl(p)) for _ in range(test_size // 2)]
-triv_testing = [encode_formula(triv(random_formula(p*p))) for _ in range(test_size // 2)]
-newtop20 = sorted(newpool, key=lambda n: score(n, nontriv_training, triv_training), reverse=True)[:20]
+pool_init_size = 100
+pool_max_parents_size = 50
 
-for net in newtop20:
-    print(score(net, nontriv_testing, triv_testing) / test_size)
+mutparam = 0.03
 
+training_data = (gen_nontriv(depthparam, train_size // 2),
+                    gen_triv(depthparam, train_size // 2))
+testing_data = (gen_nontriv(depthparam, train_size // 2),
+                    gen_triv(depthparam, train_size // 2))
+
+from heapq import nlargest
+
+def run():
+    pool = [RandomTreeNetwork(root_size, enc_size, hiddens, hiddens, 1)
+            for _ in range(pool_init_size)]
+    print("First generation created")
+    while True:
+        scored = ((net, score(net, *training_data)) for net in pool)
+        print("Scored")
+        fittest = nlargest(pool_max_parents_size, scored, key=lambda x: x[1])
+        print("Best scores:", fittest[0][1], fittest[1][1], fittest[2][1])
+        print("VS testing:", score(fittest[0][0], *testing_data),
+                             score(fittest[1][0], *testing_data),
+                             score(fittest[2][0], *testing_data))
+        new_pool = [x[0].crossover(y[0])
+                    for (i, x) in enumerate(fittest)
+                    for y in fittest[i+1:]]
+        for new_net in new_pool:
+            new_net.mutate_weights(mutparam)
+        pool = [x[0] for x in fittest] + new_pool
+        print("Breeding complete")
+
+if __name__ == '__main__':
+    run()

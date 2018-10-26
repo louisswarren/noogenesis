@@ -10,6 +10,10 @@ class Layer:
         biases = (self.biases + other.biases) / 2
         return Layer(weights, biases)
 
+    def mutate(self, epsilon):
+        self.weights += epsilon * (2 * np.random.rand(*self.weights.shape) + 1)
+        self.biases += epsilon * (2 * np.random.rand(*self.biases.shape) + 1)
+
     def think(self, x):
         return x @ self.weights + self.biases
 
@@ -23,18 +27,19 @@ class Network:
     def __init__(self, layers):
         self.layers = layers
 
-    def mutate_weights(epsilon):
-        pass
-
-    def mutate_dimension(prob):
-        pass
-
     def crossover(self, other):
         # Dumb strategy: take means
         layers = []
         for sl, ol in zip(self.layers, other.layers):
             layers.append(sl.crossover(ol))
         return Network(layers)
+
+    def mutate_weights(self, epsilon):
+        for layer in self.layers:
+            layer.mutate(epsilon)
+
+    def mutate_dimension(self, prob):
+        pass
 
     def think(self, x):
         for layer in self.layers:
@@ -68,6 +73,10 @@ class TreeNetwork:
     def crossover(self, other):
         return TreeNetwork(self.treenet.crossover(other.treenet),
                            self.endnet.crossover(other.endnet))
+
+    def mutate_weights(self, epsilon):
+        self.treenet.mutate_weights(epsilon)
+        self.endnet.mutate_weights(epsilon)
 
     def _treeinput(self, t):
         if isinstance(t, Leaf):
