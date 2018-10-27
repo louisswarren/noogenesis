@@ -58,7 +58,7 @@ def score(network, nontrivs, trivs):
             c += 1
     return c / (len(nontrivs) + len(trivs))
 
-depthparam = 0.9
+depthparam = 0.8
 train_size = 1000
 test_size = 100
 
@@ -69,7 +69,7 @@ hiddens = [20]
 pool_init_size = 100
 pool_max_parents_size = 50
 
-mutparam = 0.03
+mutparam = 0.05
 
 training_data = (gen_nontriv(depthparam, train_size // 2),
                     gen_triv(depthparam, train_size // 2))
@@ -90,11 +90,13 @@ def run():
         print("VS testing:", score(fittest[0][0], *testing_data),
                              score(fittest[1][0], *testing_data),
                              score(fittest[2][0], *testing_data))
-        pool = [x[0] for x in fittest]
-        pool += [x[0].crossover(y[0])
-                 for (i, x) in enumerate(fittest) for y in fittest[i+1:]]
+        surviving = [x[0] for x in fittest]
+        pool = [x.copy() for x in surviving] +\
+                [x.crossover(y)
+                 for (i, x) in enumerate(surviving) for y in surviving[i+1:]]
         for net in pool:
             net.mutate_weights(mutparam)
+        pool += surviving
         print("Breeding complete")
 
 if __name__ == '__main__':

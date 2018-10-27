@@ -5,6 +5,9 @@ class Layer:
         self.weights = weights
         self.biases = biases
 
+    def copy(self):
+        return Layer(np.copy(self.weights), np.copy(self.biases))
+
     def crossover(self, other):
         weights = (self.weights + other.weights) / 2
         biases = (self.biases + other.biases) / 2
@@ -26,6 +29,9 @@ def RandomLayer(insize, outsize):
 class Network:
     def __init__(self, layers):
         self.layers = layers
+
+    def copy(self):
+        return Network([x.copy() for x in self.layers])
 
     def crossover(self, other):
         # Dumb strategy: take means
@@ -69,6 +75,9 @@ class TreeNetwork:
     def __init__(self, treenet, endnet):
         self.treenet = treenet
         self.endnet = endnet
+
+    def copy(self):
+        return TreeNetwork(self.treenet.copy(), self.endnet.copy())
 
     def crossover(self, other):
         return TreeNetwork(self.treenet.crossover(other.treenet),
