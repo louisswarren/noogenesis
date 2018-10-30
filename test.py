@@ -48,6 +48,20 @@ def gen_nontriv(p, n):
 def gen_triv(p, n):
     return [encode_formula(triv(random_formula(p*p))) for _ in range(n)]
 
+def gen_nontriv(p, n):
+    return [encode_formula(random.choice([
+        P >> Q,
+        Q >> P,
+        P >> R,
+        R >> P,
+        Q >> R,
+        R >> Q,
+        ])) for _ in range(n)]
+
+def gen_triv(p, n):
+    return [encode_formula(random.choice(
+            [P >> P, Q >> Q, R >> R])) for _ in range(n)]
+
 def score(network, nontrivs, trivs):
     c = 0
     for nontriv in nontrivs:
@@ -69,7 +83,7 @@ hiddens = [20]
 pool_init_size = 100
 pool_max_parents_size = 50
 
-mutparam = 0.05
+mutparam = 0.2
 
 training_data = (gen_nontriv(depthparam, train_size // 2),
                     gen_triv(depthparam, train_size // 2))
@@ -79,8 +93,8 @@ testing_data = (gen_nontriv(depthparam, train_size // 2),
 from heapq import nlargest
 
 def run():
-    pool = [RandomTreeNetwork(root_size, enc_size, hiddens, hiddens, 1)
-            for _ in range(pool_init_size)]
+    pool = {RandomTreeNetwork(root_size, enc_size, hiddens, hiddens, 1)
+            for _ in range(pool_init_size)}
     print("First generation created")
     while True:
         scored = ((net, score(net, *training_data)) for net in pool)
@@ -91,12 +105,12 @@ def run():
                              score(fittest[1][0], *testing_data),
                              score(fittest[2][0], *testing_data))
         surviving = [x[0] for x in fittest]
-        pool = [x.copy() for x in surviving] +\
-                [x.crossover(y)
-                 for (i, x) in enumerate(surviving) for y in surviving[i+1:]]
+        pool = {x.copy() for x in surviving} |\
+                {x.crossover(y)
+                 for (i, x) in enumerate(surviving) for y in surviving[i+1:]}
         for net in pool:
             net.mutate_weights(mutparam)
-        pool += surviving
+        pool = pool | set(surviving)
         print("Breeding complete")
 
 if __name__ == '__main__':

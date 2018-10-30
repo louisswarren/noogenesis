@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 class Layer:
     def __init__(self, weights, biases):
@@ -8,10 +9,23 @@ class Layer:
     def copy(self):
         return Layer(np.copy(self.weights), np.copy(self.biases))
 
-    def crossover(self, other):
+    def crossover_mean(self, other):
+        # Dumb strategy: take means
         weights = (self.weights + other.weights) / 2
         biases = (self.biases + other.biases) / 2
         return Layer(weights, biases)
+
+    def crossover_neurons(self, other):
+        # Higher level: mix neurons
+        sel = [random.choice((True, False)) for _ in range(len(self.weights))]
+        weights = np.array([u if s else v
+                            for s, u, v in zip(sel, self.weights, other.weights)])
+        biases = np.array([x if s else y
+                           for s, x, y in zip(sel, self.biases, other.biases)])
+        return Layer(weights, biases)
+
+    def crossover(self, other):
+        return self.crossover_neurons(other)
 
     def mutate(self, epsilon):
         self.weights += epsilon * (2 * np.random.rand(*self.weights.shape) + 1)
@@ -34,7 +48,6 @@ class Network:
         return Network([x.copy() for x in self.layers])
 
     def crossover(self, other):
-        # Dumb strategy: take means
         layers = []
         for sl, ol in zip(self.layers, other.layers):
             layers.append(sl.crossover(ol))
