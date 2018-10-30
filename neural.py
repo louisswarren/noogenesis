@@ -18,11 +18,11 @@ class Layer:
         self.biases += epsilon * (2 * np.random.rand(*self.biases.shape) + 1)
 
     def think(self, x):
-        return x @ self.weights + self.biases
+        return self.weights @ x + self.biases
 
 def RandomLayer(insize, outsize):
-    weights = 2 * np.random.rand(insize, outsize) - 1
-    biases = 2 * np.random.rand(outsize) - 1
+    weights = 2 * np.random.rand(outsize, insize) - 1
+    biases = 2 * np.random.rand(outsize, 1) - 1
     return Layer(weights, biases)
 
 
@@ -93,7 +93,7 @@ class TreeNetwork:
         elif isinstance(t, Stem):
             left = self._treeinput(t.left)
             right = self._treeinput(t.right)
-            return self.treenet.think([*t.value, *left, *right])
+            return self.treenet.think([[x] for x in [*t.value, *left, *right]])
         else:
             raise NotImplementedError
 
