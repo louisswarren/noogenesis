@@ -65,10 +65,10 @@ def gen_triv(p, n):
 def score(network, nontrivs, trivs):
     c = 0
     for nontriv in nontrivs:
-        if network.think(nontriv)[0] >= 1:
+        if abs(network.think(nontriv)[0]) >= 1:
             c += 1
     for triv in trivs:
-        if network.think(triv)[0] < 1:
+        if abs(network.think(triv)[0]) < 1:
             c += 1
     return c / (len(nontrivs) + len(trivs))
 
@@ -80,10 +80,10 @@ root_size = 1 # Just have implication
 
 hiddens = [20]
 
-pool_init_size = 100
-pool_max_parents_size = 50
+pool_init_size = 200
+pool_max_parents_size = 1000
 
-mutparam = 0.2
+mutparam = 0.3
 
 training_data = (gen_nontriv(depthparam, train_size // 2),
                     gen_triv(depthparam, train_size // 2))
@@ -98,18 +98,22 @@ def run():
     print("First generation created")
     while True:
         scored = ((net, score(net, *training_data)) for net in pool)
+        scored = ((net, v) for net, v in scored if v  > 0.5)
         print("Scored")
         fittest = nlargest(pool_max_parents_size, scored, key=lambda x: x[1])
-        print("Best scores:", fittest[0][1], fittest[1][1], fittest[2][1])
+        print("Best scores:")
+        for x in fittest:
+            print(x[1], end=', ')
+        print()
         print("VS testing:", score(fittest[0][0], *testing_data),
                              score(fittest[1][0], *testing_data),
                              score(fittest[2][0], *testing_data))
         surviving = [x[0] for x in fittest]
-        pool = {x.copy() for x in surviving} |\
-                {x.crossover(y)
-                 for (i, x) in enumerate(surviving) for y in surviving[i+1:]}
-        for net in pool:
+        pool = {x.crossover(y)
+                for (i, x) in enumerate(surviving) for y in surviving[i+1:]}
+        for net in {net.copy() for net in surviving}:
             net.mutate_weights(mutparam)
+            pool.add(net)
         pool = pool | set(surviving)
         print("Breeding complete")
 
