@@ -2,6 +2,7 @@ import random
 
 from neural import *
 from formula import *
+from genetics import *
 
 enc_size = 8 # Need at least 3 for P, Q, R
 P, Q, R = (Atom(x) for x in "PQR")
@@ -81,7 +82,7 @@ root_size = 1 # Just have implication
 hiddens = [20]
 
 pool_init_size = 200
-pool_max_parents_size = 1000
+pool_max_size = 1000
 
 mutparam = 0.3
 
@@ -90,32 +91,11 @@ training_data = (gen_nontriv(depthparam, train_size // 2),
 testing_data = (gen_nontriv(depthparam, train_size // 2),
                     gen_triv(depthparam, train_size // 2))
 
-from heapq import nlargest
-
-def run():
-    pool = {RandomTreeNetwork(root_size, enc_size, hiddens, hiddens, 1)
-            for _ in range(pool_init_size)}
-    print("First generation created")
-    while True:
-        scored = ((net, score(net, *training_data)) for net in pool)
-        scored = ((net, v) for net, v in scored if v  > 0.5)
-        print("Scored")
-        fittest = nlargest(pool_max_parents_size, scored, key=lambda x: x[1])
-        print("Best scores:")
-        for x in fittest:
-            print(x[1], end=', ')
-        print()
-        print("VS testing:", score(fittest[0][0], *testing_data),
-                             score(fittest[1][0], *testing_data),
-                             score(fittest[2][0], *testing_data))
-        surviving = [x[0] for x in fittest]
-        pool = {x.crossover(y)
-                for (i, x) in enumerate(surviving) for y in surviving[i+1:]}
-        for net in {net.copy() for net in surviving}:
-            net.mutate_weights(mutparam)
-            pool.add(net)
-        pool = pool | set(surviving)
-        print("Breeding complete")
-
 if __name__ == '__main__':
-    run()
+    pool = (RandomTreeNetwork(root_size, enc_size, hiddens, hiddens, 1)
+            for _ in range(pool_init_size))
+    print("First generation created")
+    fitness = lambda x: score(x, *training_data)
+    mutator = lambda x: x.mutate_weights(mutparam)
+    crosser = lambda x, y: x.crossover(y)
+    run_pool(pool, fitness, pool_max_size, mutator, crosser, 5)

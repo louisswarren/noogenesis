@@ -6,9 +6,6 @@ class Layer:
         self.weights = weights
         self.biases = biases
 
-    def copy(self):
-        return Layer(np.copy(self.weights), np.copy(self.biases))
-
     def crossover_mean(self, other):
         # Dumb strategy: take means
         weights = (self.weights + other.weights) / 2
@@ -28,8 +25,9 @@ class Layer:
         return self.crossover_neurons(other)
 
     def mutate(self, epsilon):
-        self.weights += epsilon * (2 * np.random.rand(*self.weights.shape) + 1)
-        self.biases += epsilon * (2 * np.random.rand(*self.biases.shape) + 1)
+        weights = self.weights + epsilon * (2 * np.random.rand(*self.weights.shape) + 1)
+        biases = self.biases + epsilon * (2 * np.random.rand(*self.biases.shape) + 1)
+        return Layer(weights, biases)
 
     def think(self, x):
         return self.weights @ x + self.biases
@@ -44,9 +42,6 @@ class Network:
     def __init__(self, layers):
         self.layers = layers
 
-    def copy(self):
-        return Network([x.copy() for x in self.layers])
-
     def crossover(self, other):
         layers = []
         for sl, ol in zip(self.layers, other.layers):
@@ -54,8 +49,8 @@ class Network:
         return Network(layers)
 
     def mutate_weights(self, epsilon):
-        for layer in self.layers:
-            layer.mutate(epsilon)
+        layers = [layer.mutate(epsilon) for layer in self.layers]
+        return Network(layers)
 
     def mutate_dimension(self, prob):
         pass
@@ -89,16 +84,14 @@ class TreeNetwork:
         self.treenet = treenet
         self.endnet = endnet
 
-    def copy(self):
-        return TreeNetwork(self.treenet.copy(), self.endnet.copy())
-
     def crossover(self, other):
         return TreeNetwork(self.treenet.crossover(other.treenet),
                            self.endnet.crossover(other.endnet))
 
     def mutate_weights(self, epsilon):
-        self.treenet.mutate_weights(epsilon)
-        self.endnet.mutate_weights(epsilon)
+        treenet = self.treenet.mutate_weights(epsilon)
+        endnet = self.endnet.mutate_weights(epsilon)
+        return TreeNetwork(treenet, endnet)
 
     def _treeinput(self, t):
         if isinstance(t, Leaf):
