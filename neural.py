@@ -25,8 +25,8 @@ class Layer:
         return self.crossover_neurons(other)
 
     def mutate(self, epsilon):
-        weights = self.weights + epsilon * (2 * np.random.rand(*self.weights.shape) + 1)
-        biases = self.biases + epsilon * (2 * np.random.rand(*self.biases.shape) + 1)
+        weights = self.weights + epsilon * (2 * np.random.rand(*self.weights.shape) - 1)
+        biases = self.biases + epsilon * (2 * np.random.rand(*self.biases.shape) - 1)
         return Layer(weights, biases)
 
     def think(self, x):
