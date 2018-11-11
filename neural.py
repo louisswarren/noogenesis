@@ -1,6 +1,9 @@
 import numpy as np
 import random
 
+def _rescale(r, epsilon):
+    return epsilon * (2 * r - 1)
+
 class Layer:
     def __init__(self, weights, biases):
         self.weights = weights
@@ -29,6 +32,20 @@ class Layer:
         biases = self.biases + epsilon * (2 * np.random.rand(*self.biases.shape) - 1)
         return Layer(weights, biases)
 
+    def mutate_one(self, epsilon):
+        wm = np.zeros(self.weights.shape)
+        h = random.randrange(self.weights.shape[0])
+        w = random.randrange(self.weights.shape[1] + 1)
+        if w == self.weights.shape[1]:
+            bm = np.zeros(self.biases.shape)
+            bm[h][0] = _rescale(random.random(), epsilon)
+            return Layer(self.weights, self.biases + bm)
+        else:
+            wm = np.zeros(self.weights.shape)
+            wm[h][w] = _rescale(random.random(), epsilon)
+            return Layer(self.weights + wm, self.biases)
+
+
     def think(self, x):
         return self.weights @ x + self.biases
 
@@ -49,7 +66,7 @@ class Network:
         return Network(layers)
 
     def mutate_weights(self, epsilon):
-        layers = [layer.mutate(epsilon) for layer in self.layers]
+        layers = [layer.mutate_one(epsilon) for layer in self.layers]
         return Network(layers)
 
     def mutate_dimension(self, prob):
