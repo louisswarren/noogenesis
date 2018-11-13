@@ -44,12 +44,6 @@ def triv(x):
     return x >> x
 
 def gen_nontriv(p, n):
-    return [encode_formula(random_nontriv_impl(p)) for _ in range(n)]
-
-def gen_triv(p, n):
-    return [encode_formula(triv(random_formula(p*p))) for _ in range(n)]
-
-def gen_nontriv(p, n):
     return [encode_formula(random.choice([
         P >> Q,
         Q >> P,
