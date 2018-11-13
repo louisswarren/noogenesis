@@ -9,6 +9,9 @@ class Layer:
         self.weights = weights
         self.biases = biases
 
+    def copy(self):
+        return Layer(self.weights.copy(), self.biases.copy())
+
     def crossover_mean(self, other):
         # Dumb strategy: take means
         weights = (self.weights + other.weights) / 2
@@ -66,7 +69,9 @@ class Network:
         return Network(layers)
 
     def mutate_weights(self, epsilon):
-        layers = [layer.mutate_one(epsilon) for layer in self.layers]
+        layers = [layer.copy() for layer in self.layers]
+        x = random.choice(layers)
+        x.mutate(epsilon)
         return Network(layers)
 
     def mutate_dimension(self, prob):

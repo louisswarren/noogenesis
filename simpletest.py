@@ -49,6 +49,20 @@ def gen_nontriv(p, n):
 def gen_triv(p, n):
     return [encode_formula(triv(random_formula(p*p))) for _ in range(n)]
 
+def gen_nontriv(p, n):
+    return [encode_formula(random.choice([
+        P >> Q,
+        Q >> P,
+        P >> R,
+        R >> P,
+        Q >> R,
+        R >> Q,
+        ])) for _ in range(n)]
+
+def gen_triv(p, n):
+    return [encode_formula(random.choice(
+            [P >> P, Q >> Q, R >> R])) for _ in range(n)]
+
 def score(network, nontrivs, trivs):
     c = 0
     for nontriv in nontrivs:
@@ -59,8 +73,8 @@ def score(network, nontrivs, trivs):
             c += 1
     return c / (len(nontrivs) + len(trivs))
 
-depthparam = 0.6
-train_size = 200
+depthparam = 0.8
+train_size = 1000
 test_size = 100
 
 root_size = 1 # Just have implication
@@ -68,9 +82,9 @@ root_size = 1 # Just have implication
 hiddens = [20]
 
 pool_init_size = 200
-pool_max_size = 100
+pool_max_size = 50
 
-mutparam = 1.0
+mutparam = 0.3
 
 training_data = (gen_nontriv(depthparam, train_size // 2),
                     gen_triv(depthparam, train_size // 2))

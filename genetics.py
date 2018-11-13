@@ -2,10 +2,13 @@ from heapq import nlargest
 
 def pool_iteration(pool, fitness, max_size, mutator, crosser, trace=0):
     scored = []
+    pool = list(pool)
+    print("Pool iteration. Pool size:", len(pool))
     for x in pool:
         score = fitness(x)
         if score > 0.5:
             scored.append((x, score))
+    print("Only", len(scored), "survived.")
     fittest = nlargest(max_size, scored, key=lambda x: x[1])
     if trace:
         for x, score in fittest[:trace]:
@@ -27,6 +30,6 @@ def pool_iteration(pool, fitness, max_size, mutator, crosser, trace=0):
         yield x
 
 def run_pool(pool, fitness, max_size, mutator, crosser, trace=0):
+    pool = list(pool)
     while True:
-        print("Pool iteration")
         pool = list(pool_iteration(pool, fitness, max_size, mutator, crosser, trace))
