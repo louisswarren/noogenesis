@@ -1,4 +1,13 @@
 from heapq import nlargest
+import datetime
+import pickle
+
+THRESHOLD = 0.95
+
+def save(specimen):
+    with open('saved_' + datetime.datetime.now().isoformat(), 'wb') as f:
+        pickle.dump(specimen, f)
+
 
 def pool_iteration(pool, fitness, max_size, mutator, crosser, trace=0):
     scored = []
@@ -6,6 +15,9 @@ def pool_iteration(pool, fitness, max_size, mutator, crosser, trace=0):
     print("Pool iteration. Pool size:", len(pool))
     for x in pool:
         score = fitness(x)
+        if score > THRESHOLD:
+            save(x)
+            return
         if score > 0.5:
             scored.append((x, score))
     print("Only", len(scored), "survived.")
@@ -31,5 +43,5 @@ def pool_iteration(pool, fitness, max_size, mutator, crosser, trace=0):
 
 def run_pool(pool, fitness, max_size, mutator, crosser, trace=0):
     pool = list(pool)
-    while True:
+    while pool:
         pool = list(pool_iteration(pool, fitness, max_size, mutator, crosser, trace))
