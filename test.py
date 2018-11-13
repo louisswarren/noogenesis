@@ -14,9 +14,9 @@ def encode_formula(x):
     elif x == P:
         return Leaf(np.eye(enc_size, 1, 0))
     elif x == Q:
-        return Leaf(np.eye(enc_size, 1, 1))
+        return Leaf(np.eye(enc_size, 1, -1))
     elif x == R:
-        return Leaf(np.eye(enc_size, 1, 2))
+        return Leaf(np.eye(enc_size, 1, -2))
     else:
         raise NotImplementedError
 
