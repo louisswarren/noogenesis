@@ -9,9 +9,6 @@ class Layer:
         self.weights = weights
         self.biases = biases
 
-    def copy(self):
-        return Layer(self.weights.copy(), self.biases.copy())
-
     def crossover_mean(self, other):
         # Dumb strategy: take means
         weights = (self.weights + other.weights) / 2
@@ -30,7 +27,7 @@ class Layer:
     def crossover(self, other):
         return self.crossover_neurons(other)
 
-    def mutate(self, epsilon):
+    def mutate_all(self, epsilon):
         weights = self.weights + epsilon * (2 * np.random.rand(*self.weights.shape) - 1)
         biases = self.biases + epsilon * (2 * np.random.rand(*self.biases.shape) - 1)
         return Layer(weights, biases)
@@ -48,6 +45,8 @@ class Layer:
             wm[h][w] = _rescale(random.random(), epsilon)
             return Layer(self.weights + wm, self.biases)
 
+    def mutate(self, epsilon):
+        return self.mutate_all(epsilon)
 
     def think(self, x):
         return self.weights @ x + self.biases
@@ -68,14 +67,18 @@ class Network:
             layers.append(sl.crossover(ol))
         return Network(layers)
 
-    def mutate_weights(self, epsilon):
-        layers = [layer.copy() for layer in self.layers]
-        x = random.choice(layers)
-        x.mutate(epsilon)
+    def mutate_random_layer(self, epsilon):
+        layers = self.layers[:]
+        n = random.randrange(len(layers))
+        layers[n] = layers[n].mutate(epsilon)
         return Network(layers)
 
-    def mutate_dimension(self, prob):
-        pass
+    def mutate_all_layers(self, epsilon):
+        layers = [layer.mutate(epsilon) for layer in self.layers]
+        return Network(layers)
+
+    def mutate(self, epsilon):
+        return self.mutate_all_layers(epsilon)
 
     def think(self, x):
         for layer in self.layers:
@@ -110,9 +113,9 @@ class TreeNetwork:
         return TreeNetwork(self.treenet.crossover(other.treenet),
                            self.endnet.crossover(other.endnet))
 
-    def mutate_weights(self, epsilon):
-        treenet = self.treenet.mutate_weights(epsilon)
-        endnet = self.endnet.mutate_weights(epsilon)
+    def mutate(self, epsilon):
+        treenet = self.treenet.mutate(epsilon)
+        endnet = self.endnet.mutate(epsilon)
         return TreeNetwork(treenet, endnet)
 
     def _treeinput(self, t):

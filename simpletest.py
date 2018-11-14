@@ -90,6 +90,6 @@ if __name__ == '__main__':
             for _ in range(pool_init_size))
     print("First generation created")
     fitness = lambda x: score(x, *training_data)
-    mutator = lambda x: x.mutate_weights(mutparam)
+    mutator = lambda x: x.mutate(mutparam)
     crosser = lambda x, y: x.crossover(y)
     run_pool(pool, fitness, pool_max_size, mutator, crosser, 5)
