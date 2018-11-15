@@ -116,6 +116,9 @@ class TreeNetwork:
         self.treenet = treenet
         self.endnet = endnet
 
+    @property
+    def history(self):
+        return self.treenet.history + ', ' + self.endnet.history
     def crossover(self, other):
         return TreeNetwork(self.treenet.crossover(other.treenet),
                            self.endnet.crossover(other.endnet))

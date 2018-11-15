@@ -25,7 +25,7 @@ def pool_iteration(pool, fitness, max_size, mutator, crosser, trace=0):
     fittest = nlargest(max_size, scored, key=lambda x: x[1])
     if trace:
         for x, score in fittest[:trace]:
-            print(score, end='\t')
+            print(score, '\t', x.history)
         print()
     print("Mutating ... ", end='')
     if mutator:
