@@ -51,6 +51,9 @@ class Layer:
     def think(self, x):
         return self.weights @ x + self.biases
 
+    def __str__(self):
+        return "Weights\n" + str(self.weights) + "\nBiases\n" + str(self.biases) + "\n\n"
+
 def RandomLayer(insize, outsize):
     weights = 2 * np.random.rand(outsize, insize) - 1
     biases = 2 * np.random.rand(outsize, 1) - 1
@@ -58,24 +61,25 @@ def RandomLayer(insize, outsize):
 
 
 class Network:
-    def __init__(self, layers):
+    def __init__(self, layers, history=''):
         self.layers = layers
+        self.history = history
 
     def crossover(self, other):
         layers = []
         for sl, ol in zip(self.layers, other.layers):
             layers.append(sl.crossover(ol))
-        return Network(layers)
+        return Network(layers, self.history + 'c')
 
     def mutate_random_layer(self, epsilon):
         layers = self.layers[:]
         n = random.randrange(len(layers))
         layers[n] = layers[n].mutate(epsilon)
-        return Network(layers)
+        return Network(layers, self.history + 'c')
 
     def mutate_all_layers(self, epsilon):
         layers = [layer.mutate(epsilon) for layer in self.layers]
-        return Network(layers)
+        return Network(layers, self.history + 'm')
 
     def mutate(self, epsilon):
         return self.mutate_all_layers(epsilon)
@@ -84,6 +88,9 @@ class Network:
         for layer in self.layers:
             x = layer.think(x)
         return x
+
+    def __str__(self):
+        return 'History: ' + self.history + '\n' + '\n=>\n'.join(map(str, self.layers))
 
 def RandomNetwork(*sizes):
     layers = []
@@ -130,6 +137,9 @@ class TreeNetwork:
 
     def think(self, t):
         return self.endnet.think(self._treeinput(t))
+
+    def __str__(self):
+        return "Treenet:\n" + str(self.treenet) + "\n\n\nEndnet:\n" + str(self.endnet)
 
 def RandomTreeNetwork(root_size, leaf_size, tree_hidden_sizes, end_hidden_sizes, end_outsize):
     treenet = RandomNetwork(root_size + 2 * leaf_size, *tree_hidden_sizes, leaf_size)

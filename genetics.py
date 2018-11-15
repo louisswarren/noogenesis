@@ -2,7 +2,7 @@ from heapq import nlargest
 import datetime
 import pickle
 
-THRESHOLD = 0.95
+THRESHOLD = 1
 
 def save(specimen):
     with open('saved_' + datetime.datetime.now().isoformat(), 'wb') as f:
@@ -15,8 +15,9 @@ def pool_iteration(pool, fitness, max_size, mutator, crosser, trace=0):
     print("Pool iteration. Pool size:", len(pool))
     for x in pool:
         score = fitness(x)
-        if score > THRESHOLD:
+        if score >= THRESHOLD:
             save(x)
+            print(x)
             return
         if score > 0.5:
             scored.append((x, score))
