@@ -49,6 +49,31 @@ Vector *new_vector(size_t dim)
 	return x;
 }
 
+double random_scalar(double epsilon)
+{
+	return epsilon * (2 * ((double) rand() / RAND_MAX) - 1);
+}
+
+Matrix *random_matrix(size_t rows, size_t cols, double epsilon)
+{
+	Matrix *m = new_matrix(rows, cols);
+	for (size_t i = 0; i < rows; ++i) {
+		for (size_t j = 0; j < cols; ++j) {
+			elem(m, i, j) = random_scalar(epsilon);
+		}
+	}
+	return m;
+}
+
+Vector *random_vector(size_t dim, double epsilon)
+{
+	Vector *x = new_vector(dim);
+	for (size_t i = 0; i < dim; ++i) {
+		x->elem[i] = random_scalar(epsilon);
+	}
+	return x;
+}
+
 Network *new_network(size_t depth, const size_t layer_sizes[])
 {
 	Network *n = malloc(sizeof(*n));
@@ -74,27 +99,54 @@ void transform(Vector *y, const Matrix *a, const Vector *x)
 	}
 }
 
+void print_vector(const Vector *x)
+{
+	printf("[ ");
+	for (size_t i = 0; i < x->dim; ++i) {
+		if (i + 1 < x->dim) {
+			printf("%f; ", x->elem[i]);
+		} else {
+			printf("%f ", x->elem[i]);
+		}
+	}
+	printf("]\n");
+}
+
+void print_matrix(const Matrix *m)
+{
+	for (size_t i = 0; i < m->rows; ++i) {
+		if (i == 0) {
+			printf("[[ ");
+		} else {
+			printf(" [ ");
+		}
+		for (size_t j = 0; j < m->cols; ++j) {
+			if (j + 1 < m->cols) {
+				printf("%f, ", elem(m, i, j));
+			} else {
+				printf("%f ", elem(m, i, j));
+			}
+		}
+		if (i + 1 == m->rows) {
+			printf("]]\n");
+		} else {
+			printf("];\n");
+		}
+	}
+}
+
 int main(void)
 {
-	Matrix *a = new_matrix(2, 3);
-	Vector *x = new_vector(3);
+	Matrix *a = random_matrix(2, 3, 1.0);
+	Vector *x = random_vector(3, 1.0);
 	Vector *y = new_vector(2);
 
-	a->elem[0] = 1;
-	a->elem[1] = 2;
-	a->elem[2] = 3;
-	a->elem[3] = 4;
-	a->elem[4] = 5;
-	a->elem[5] = 6;
-
-	x->elem[0] = 5;
-	x->elem[1] = 7;
-	x->elem[2] = 11;
+	print_matrix(a);
+	print_vector(x);
 
 	transform(y, a, x);
 
-	printf("%f\n", y->elem[0]);
-	printf("%f\n", y->elem[1]);
+	print_vector(y);
 
 	return 0;
 }
