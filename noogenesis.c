@@ -34,6 +34,19 @@ typedef struct {
 	Vector **memory;
 } Network;
 
+typedef struct {
+	Network *encoder;
+	Network *decider;
+} TreeNetwork;
+
+// Values of roots don't have to have the same dimension as values of leaves
+typedef struct Tree {
+	int is_leaf;
+	Vector *value;
+	struct Tree *left;
+	struct Tree *right;
+}
+
 Matrix *new_matrix(size_t rows, size_t cols)
 {
 	Matrix *m = malloc(sizeof(*m) + rows * cols * sizeof(*m->elem));
@@ -180,14 +193,13 @@ int main(void)
 
 	size_t layer_sizes[] = {7, 8, 3};
 
-	for (int i = 0; i < 1000000000; ++i) {
-		Network *n = random_network(2, layer_sizes, 1.0);
-		delete_network(n);
-	}
+	Network *n = random_network(2, layer_sizes, 1.0);
 
 	free(a);
 	free(x);
 	free(y);
+
+	delete_network(n);
 
 	return 0;
 }
