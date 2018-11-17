@@ -77,6 +77,7 @@ Vector *random_vector(size_t dim, double epsilon)
 Network *new_network(size_t depth, const size_t layer_sizes[])
 {
 	Network *n = malloc(sizeof(*n));
+	n->depth = depth;
 	allocate(n->weights, depth);
 	allocate(n->biases, depth);
 	allocate(n->memory, depth);
@@ -85,6 +86,35 @@ Network *new_network(size_t depth, const size_t layer_sizes[])
 		n->biases[i] = new_vector(layer_sizes[i + 1]);
 		n->memory[i] = new_vector(layer_sizes[i + 1]);
 	}
+	return n;
+}
+
+Network *random_network(size_t depth, const size_t layer_sizes[], double epsilon)
+{
+	Network *n = malloc(sizeof(*n));
+	n->depth = depth;
+	allocate(n->weights, depth);
+	allocate(n->biases, depth);
+	allocate(n->memory, depth);
+	for (size_t i = 0; i < depth; ++i) {
+		n->weights[i] = random_matrix(layer_sizes[i], layer_sizes[i + 1], epsilon);
+		n->biases[i] = random_vector(layer_sizes[i + 1], epsilon);
+		n->memory[i] = random_vector(layer_sizes[i + 1], epsilon);
+	}
+	return n;
+}
+
+void delete_network(Network *n)
+{
+	for (size_t i = 0; i < n->depth; ++i) {
+		free(n->weights[i]);
+		free(n->biases[i]);
+		free(n->memory[i]);
+	}
+	free(n->weights);
+	free(n->biases);
+	free(n->memory);
+	free(n);
 }
 
 void transform(Vector *y, const Matrix *a, const Vector *x)
@@ -147,6 +177,17 @@ int main(void)
 	transform(y, a, x);
 
 	print_vector(y);
+
+	size_t layer_sizes[] = {7, 8, 3};
+
+	for (int i = 0; i < 1000000000; ++i) {
+		Network *n = random_network(2, layer_sizes, 1.0);
+		delete_network(n);
+	}
+
+	free(a);
+	free(x);
+	free(y);
 
 	return 0;
 }
