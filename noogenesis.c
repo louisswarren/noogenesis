@@ -45,7 +45,7 @@ typedef struct Tree {
 	Vector *value;
 	struct Tree *left;
 	struct Tree *right;
-}
+} Tree;
 
 Matrix *new_matrix(size_t rows, size_t cols)
 {
@@ -89,6 +89,7 @@ Vector *random_vector(size_t dim, double epsilon)
 
 Network *new_network(size_t depth, const size_t layer_sizes[])
 {
+	assert(depth > 0);
 	Network *n = malloc(sizeof(*n));
 	n->depth = depth;
 	allocate(n->weights, depth);
@@ -104,6 +105,7 @@ Network *new_network(size_t depth, const size_t layer_sizes[])
 
 Network *random_network(size_t depth, const size_t layer_sizes[], double epsilon)
 {
+	assert(depth > 0);
 	Network *n = malloc(sizeof(*n));
 	n->depth = depth;
 	allocate(n->weights, depth);
@@ -139,6 +141,28 @@ void transform(Vector *y, const Matrix *a, const Vector *x)
 		for (size_t j = 0; j < x->dim; ++j) {
 			y->elem[i] += elem(a, i, j) * x->elem[j];
 		}
+	}
+}
+
+void shift(Vector *y, const Vector *x)
+{
+	assert(y->dim == x->dim);
+	for (size_t i = 0; i < y->dim; ++i) {
+		y->elem[i] += x->elem[i];
+	}
+}
+
+void affine(Vector *y, const Matrix *a, const Vector *x, const Vector *b)
+{
+	transform(y, a, x);
+	shift(y, b);
+}
+
+void think(Network *n, const Vector *x)
+{
+	affine(n->memory[0], n->weights[0], x, n->biases[0]);
+	for (size_t i = 0; i + 1 < n->depth; ++i) {
+		affine(n->memory[i+1], n->weights[i+1], n->memory[i], n->biases[i+1]);
 	}
 }
 
