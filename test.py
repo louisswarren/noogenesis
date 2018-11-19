@@ -74,8 +74,8 @@ mutparam = 1.0
 
 training_data = (gen_nontriv(depthparam, train_size // 2),
                     gen_triv(depthparam, train_size // 2))
-testing_data = (gen_nontriv(depthparam, train_size // 2),
-                    gen_triv(depthparam, train_size // 2))
+testing_data = (gen_nontriv(depthparam, test_size // 2),
+                    gen_triv(depthparam, test_size // 2))
 
 if __name__ == '__main__':
     pool = (RandomTreeNetwork(root_size, enc_size, hiddens, hiddens, 1)
