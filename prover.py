@@ -2,6 +2,9 @@ from formula import *
 
 _compose = lambda f: lambda g: lambda *a, **k: f(g(*a, **k))
 
+class DeductionError(Exception):
+    pass
+
 class Prover:
     def __init__(self, context, goal):
         self.context = context
@@ -10,16 +13,19 @@ class Prover:
         self.subproofs = []
 
     def do_assume(self):
-        assert("Assumption is possible" and isinstance(self.goal, Impl))
+        if not isinstance(self.goal, Impl):
+            raise DeductionError("Assumption is not possible")
         self.context.append(self.goal.prem)
         self.goal = self.goal.conc
 
     def do_use(self, n):
-        assert("Context formula in range" and 0 <= n < len(self.context))
+        if not 0 <= n < len(self.context):
+            raise DeductionError("Context formula out of range")
         f = self.context[n]
         premises = []
         while f != self.goal:
-            assert("Formula is usable for goal" and isinstance(f, Impl))
+            if not isinstance(f, Impl):
+                raise DeductionError("Formula is not usable for goal")
             premises.append(f.prem)
             f = f.conc
         for premise in premises:
@@ -48,6 +54,9 @@ class Prover:
         yield "-" * 40
         yield f"  {self.goal}"
         yield ""
+
+    def is_complete(self):
+        return not bool(list(self.open_problems()))
 
     @_compose('\n'.join)
     def status(self):
